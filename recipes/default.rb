@@ -17,28 +17,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-node['ntp']['packages'].each do |ntppkg|
-  package ntppkg
-end
 
-[ node['ntp']['varlibdir'],
-  node['ntp']['statsdir'] ].each do |ntpdir|
-  directory ntpdir do
-    owner node['ntp']['var_owner']
-    group node['ntp']['var_group']
-    mode 0755
+case node['plateform']
+when "windows"
+  include_recipe "windows"
+
+  windows_package "ntp" do
+    source "http://www.meinberg.de/download/ntp/windows/ntp-4.2.6p5@london-o-lpv-win32-setup.exe"
+    action :install
   end
-end
+else
+  node['ntp']['packages'].each do |ntppkg|
+    package ntppkg
+   end
 
-service node['ntp']['service'] do
-  supports :status => true, :restart => true
-  action [ :enable, :start ]
-end
+  [ node['ntp']['varlibdir'],
+    node['ntp']['statsdir'] ].each do |ntpdir|
+    directory ntpdir do
+      owner node['ntp']['var_owner']
+      group node['ntp']['var_group']
+      mode 0755
+    end
+  end
 
-template "/etc/ntp.conf" do
-  source "ntp.conf.erb"
-  owner node['ntp']['conf_owner'] 
-  group node['ntp']['conf_group']
-  mode "0644"
-  notifies :restart, resources(:service => node['ntp']['service'])
+  service node['ntp']['service'] do
+    supports :status => true, :restart => true
+    action [ :enable, :start ]
+  end
+  
+  template "/etc/ntp.conf" do
+    source "ntp.conf.erb"
+    owner node['ntp']['conf_owner'] 
+    group node['ntp']['conf_group']
+    mode "0644"
+    notifies :restart, resources(:service => node['ntp']['service'])
+  end
 end
