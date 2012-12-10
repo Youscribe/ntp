@@ -44,6 +44,12 @@ else
     supports :status => true, :restart => true
     action [ :enable, :start ]
   end
+
+  cookbook_file node['ntp']['leapfile'] do
+    owner node['ntp']['conf_owner']
+    group node['ntp']['conf_group']
+    mode 0644
+  end
   
   template "/etc/ntp.conf" do
     source "ntp.conf.erb"
